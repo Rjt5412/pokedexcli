@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/rjt5412/pokedexcli/internal/pokeapi"
 )
@@ -53,8 +54,14 @@ func startRepl(cfg *config) {
 		fmt.Print("Pokedex >")
 		reader.Scan()
 
-		input := reader.Text()
-		command, ok := commands[input]
+		words := cleanInput(reader.Text())
+
+		if len(words) == 0 {
+			continue
+		}
+
+		commandName := words[0]
+		command, ok := commands[commandName]
 
 		if ok {
 			err := command.callback(cfg)
@@ -67,4 +74,10 @@ func startRepl(cfg *config) {
 		}
 
 	}
+}
+
+func cleanInput(input string) []string {
+	lowered := strings.ToLower(input)
+	words := strings.Fields(lowered)
+	return words
 }
