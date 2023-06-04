@@ -43,6 +43,9 @@ func (c *Cache) Get(key string) ([]byte, bool) {
 }
 
 func (c *Cache) reapLoop(interval time.Duration) {
+	// NOTE: Not adding using mutex here since cache lock would be acquired forever
+	// because this is a continuosly running subroutine. Instead, we should acquire the lock
+	// when reap() is executed.
 	ticker := time.NewTicker(interval)
 	for range ticker.C {
 		c.reap(interval)
