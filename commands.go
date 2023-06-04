@@ -85,19 +85,58 @@ func commandCatch(cfg *config, args ...string) error {
 	}
 
 	pokemonName := args[0]
-	fmt.Printf("Throwing a Pokeball at %s \n", pokemonName)
+	fmt.Printf("Throwing a Pokeball at %s \n...", pokemonName)
 	pokemon, err := cfg.pokeapiClient.GetPokemonInfo(pokemonName)
 	if err != nil {
 		return err
 	}
 	ranNum := rand.Intn(pokemon.BaseExperience)
-	fmt.Println(ranNum, pokemon.BaseExperience, threshold)
 
 	if ranNum > threshold {
 		return fmt.Errorf("failed to catch %s", pokemonName)
 	}
 
 	cfg.caughtPokemon[pokemonName] = pokemon
-	fmt.Printf("%s was caught! \n", pokemonName)
+	fmt.Printf("%s was caught! \n You can now inspect it with the inspect command. \n", pokemonName)
+	return nil
+}
+
+func commandInspect(cfg *config, args ...string) error {
+	if len(args) != 1 {
+		return errors.New("you must provide a pokemon name")
+	}
+
+	pokemonName := args[0]
+	pokemon, ok := cfg.caughtPokemon[pokemonName]
+	if !ok {
+		return fmt.Errorf("you have not caught that pokemon")
+	}
+
+	fmt.Printf("Name: %s \n", pokemon.Name)
+	fmt.Printf("Height: %v \n", pokemon.Height)
+	fmt.Printf("Weight: %v \n", pokemon.Weight)
+	fmt.Println("Stats:")
+	for _, stat := range pokemon.Stats {
+		fmt.Printf("  -%s:%d\n", stat.Stat.Name, stat.BaseStat)
+	}
+	fmt.Println("Types:")
+	for _, typeInfo := range pokemon.Types {
+		fmt.Printf("  -%s\n", typeInfo.Type.Name)
+	}
+	return nil
+}
+
+func commandPokedex(cfg *config, args ...string) error {
+
+	caughtPokemon := cfg.caughtPokemon
+
+	if len(caughtPokemon) == 0 {
+		return fmt.Errorf("pokedex is empty. You haven't caught any pokemon so far")
+	}
+
+	fmt.Println("Your Pokedex:")
+	for name := range caughtPokemon {
+		fmt.Println("  -", name)
+	}
 	return nil
 }
