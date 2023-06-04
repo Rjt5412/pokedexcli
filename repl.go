@@ -12,7 +12,7 @@ import (
 type cliCommand struct {
 	name        string
 	description string
-	callback    func(*config) error
+	callback    func(*config, ...string) error
 }
 
 type config struct {
@@ -33,8 +33,8 @@ func getCommands() map[string]cliCommand {
 			description: "Exit the pokedex",
 			callback:    commandExit,
 		},
-		"mapf": {
-			name:        "mapf",
+		"map": {
+			name:        "map",
 			description: "Display the names of next 20 location areas in the pokemon world based on current location",
 			callback:    commandMapf,
 		},
@@ -42,6 +42,11 @@ func getCommands() map[string]cliCommand {
 			name:        "mapb",
 			description: "Display the names of previous 20 locations based on current location",
 			callback:    commandMapb,
+		},
+		"explore": {
+			name:        "explore <location_name>",
+			description: "Explore a location",
+			callback:    commandExplore,
 		},
 	}
 }
@@ -54,23 +59,27 @@ func startRepl(cfg *config) {
 		fmt.Print("Pokedex >")
 		reader.Scan()
 
-		words := cleanInput(reader.Text())
+		cleaned := cleanInput(reader.Text())
 
-		if len(words) == 0 {
+		if len(cleaned) == 0 {
 			continue
 		}
 
-		commandName := words[0]
+		commandName := cleaned[0]
+		args := []string{}
+		if len(cleaned) > 1 {
+			args = cleaned[1:]
+		}
 		command, ok := commands[commandName]
 
 		if ok {
-			err := command.callback(cfg)
+			err := command.callback(cfg, args...)
 			if err != nil {
 				fmt.Println(err)
 			}
 		} else {
 			fmt.Println("Invalid command")
-			commands["help"].callback(cfg)
+			commands["help"].callback(cfg, args...)
 		}
 
 	}
